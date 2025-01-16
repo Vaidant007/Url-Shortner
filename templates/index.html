@@ -1,0 +1,163 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔗 URL Shortener</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            margin-top: 30px;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 60%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            background-color: #0078D7;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005ea2;
+        }
+
+        /* Result Section */
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        #short-url-container {
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .short-url {
+            font-size: 18px;
+            color: #0078D7;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .short-url:hover {
+            text-decoration: underline;
+        }
+
+        #qr-code-container {
+            margin-top: 30px;
+        }
+
+        #qr-code {
+            margin-top: 20px;
+            max-width: 200px;
+            visibility: hidden; /* Start hidden */
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            input[type="text"] {
+                width: 80%;
+            }
+        }
+    </style>
+    <script>
+        async function shortenURL() {
+            const url = document.getElementById('url').value;
+            if (!url) {
+                alert('Please enter a valid URL!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (data.short_url) {
+                    document.getElementById('result').innerText = '✅ Shortened URL:';
+                    const shortUrlElement = document.getElementById('short-url');
+                    shortUrlElement.innerText = data.short_url;
+                    shortUrlElement.href = data.short_url;
+                    document.getElementById('short-url-container').style.display = 'block';
+
+                    // Display QR Code
+                    const qrCodeImg = document.getElementById('qr-code');
+                    qrCodeImg.src = data.qr_code_url;
+                    qrCodeImg.style.visibility = 'visible';
+                } else {
+                    document.getElementById('result').innerText = `❌ Error: ${data.error}`;
+                }
+            } catch (error) {
+                console.error('Error shortening URL:', error);
+                alert('Failed to shorten URL. Please try again later.');
+            }
+        }
+
+        function copyToClipboard() {
+            const shortUrl = document.getElementById('short-url').innerText;
+            navigator.clipboard.writeText(shortUrl).then(() => {
+                alert('✅ URL copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy URL:', err);
+                alert('❌ Failed to copy URL.');
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>🔗 URL Shortener</h1>
+    <p>Enter a URL to shorten and generate a QR Code:</p>
+    <input type="text" id="url" placeholder="Enter a valid URL">
+    <button onclick="shortenURL()">Shorten</button>
+    
+    <p id="result"></p>
+
+    <div id="short-url-container">
+        <a id="short-url" class="short-url" target="_blank"></a>
+        <button onclick="copyToClipboard()">Copy to Clipboard</button>
+    </div>
+
+    <div id="qr-code-container">
+        <h3>QR Code:</h3>
+        <img id="qr-code" alt="QR Code">
+    </div>
+
+    <footer>
+        <p>&copy; 2024 URL Shortener. Built with ❤️ and Flask.</p>
+    </footer>
+</body>
+</html>
